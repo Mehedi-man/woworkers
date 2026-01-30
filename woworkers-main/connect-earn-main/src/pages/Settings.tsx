@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
@@ -8,6 +9,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
+import { useAuth } from '@/contexts/AuthContext';
+import { useUserProfile } from '@/hooks/useUserProfile';
+import { useToast } from '@/hooks/use-toast';
 import {
   User,
   Bell,
@@ -26,7 +30,54 @@ import { useTheme } from '@/components/ThemeProvider';
 
 export default function Settings() {
   const { theme, setTheme } = useTheme();
+  const { user, signOut } = useAuth();
+  const { profile, updateProfile, isUpdating } = useUserProfile();
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    if (!user) {
+      navigate('/auth');
+    }
+  }, [user, navigate]);
+
+  useEffect(() => {
+    if (profile) {
+      setFirstName(profile.first_name || '');
+      setLastName(profile.last_name || '');
+    }
+  }, [profile]);
+
+  const handleSaveProfile = async () => {
+    setIsSaving(true);
+    try {
+      updateProfile({
+        first_name: firstName,
+        last_name: lastName,
+      });
+      toast({
+        title: 'সফল',
+        description: 'আপনার প্রোফাইল আপডেট হয়েছে।',
+      });
+    } catch (error) {
+      toast({
+        title: 'ত্রুটি',
+        description: 'প্রোফাইল আপডেট করতে ব্যর্থ হয়েছে।',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -85,32 +136,33 @@ export default function Settings() {
                   <div className="grid md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="firstName">প্রথম নাম</Label>
-                      <Input id="firstName" defaultValue="আলেক্স" />
+                      <Input 
+                        id="firstName" 
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="lastName">শেষ নাম</Label>
-                      <Input id="lastName" defaultValue="জনসন" />
+                      <Input 
+                        id="lastName" 
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="email">ইমেইল</Label>
-                      <Input id="email" type="email" defaultValue="alex@example.com" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="phone">ফোন</Label>
-                      <Input id="phone" type="tel" defaultValue="+৮৮০ ১৭০০ ০০০০০০" />
+                      <Input id="email" type="email" value={user?.email || ''} disabled />
                     </div>
                   </div>
                   
-                  <div className="space-y-2">
-                    <Label htmlFor="bio">বায়ো</Label>
-                    <textarea 
-                      id="bio"
-                      className="w-full min-h-[100px] px-3 py-2 rounded-md border border-input bg-background text-sm"
-                      placeholder="আপনার সম্পর্কে বলুন..."
-                    />
-                  </div>
-                  
-                  <Button variant="hero">পরিবর্তন সংরক্ষণ করুন</Button>
+                  <Button 
+                    variant="hero"
+                    onClick={handleSaveProfile}
+                    disabled={isSaving || isUpdating}
+                  >
+                    {isSaving || isUpdating ? 'সংরক্ষণ হচ্ছে...' : 'পরিবর্তন সংরক্ষণ করুন'}
+                  </Button>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -328,7 +380,7 @@ export default function Settings() {
                   <p className="font-medium">সাইন আউট</p>
                   <p className="text-sm text-muted-foreground">আপনার অ্যাকাউন্ট থেকে সাইন আউট করুন</p>
                 </div>
-                <Button variant="outline">
+                <Button variant="outline" onClick={handleSignOut}>
                   <LogOut className="h-4 w-4 mr-2" />
                   সাইন আউট
                 </Button>

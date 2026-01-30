@@ -79,9 +79,11 @@ export default function Dashboard() {
   });
 
   useEffect(() => {
-    if (user && userRole === 'freelancer') {
+    if (!user) {
+      navigate('/auth');
+    } else if (userRole === 'freelancer') {
       fetchDashboardData();
-    } else if (user && userRole === 'client') {
+    } else if (userRole === 'client') {
       navigate('/client-dashboard');
     }
   }, [user, userRole, navigate]);

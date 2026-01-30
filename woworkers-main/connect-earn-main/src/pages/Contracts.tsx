@@ -45,6 +45,7 @@ interface Contract {
   id: string;
   job_id: string;
   client_id: string;
+  freelancer_id: string;
   contract_type: string;
   amount: number;
   status: string;
