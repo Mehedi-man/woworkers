@@ -213,9 +213,11 @@ Refer to their documentation for environment variable configuration.
 - Restart build after adding variables
 - Check variable names match exactly (case-sensitive)
 
-### Routing Issues (404 on refresh)
-- Ensure SPA routing is configured (redirect all routes to index.html)
-- Check `vercel.json` or `netlify.toml` configuration
+### Routing Issues (404 on refresh / Vercel NOT_FOUND)
+- **Root Directory (most common)**: If your repo has a nested folder (e.g. `connect-earn-main/connect-earn-main/`), set **Root Directory** in Vercel to the folder that contains `package.json` and `vercel.json` (e.g. `connect-earn-main`). Otherwise Vercel builds from the wrong path and your rewrites/config may not apply.
+- Ensure SPA routing is configured: `vercel.json` must have `"rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]` so all non-file routes serve `index.html` and the client router can handle them.
+- Check **Output Directory** in Vercel build settings is `dist` (Vite’s default).
+- Check `vercel.json` or `netlify.toml` is in the same directory Vercel uses as the project root.
 
 ### Supabase Connection Issues
 - Verify Supabase URL and key are correct
